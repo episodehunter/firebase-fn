@@ -33,3 +33,9 @@ export interface Show {
   totalNumberOfEpisodes: number;
   seasons: number[];
 }
+
+export interface ShowTitle {
+  id: string
+  name: string
+  followers: number
+}
