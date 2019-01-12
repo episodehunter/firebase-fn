@@ -10,7 +10,8 @@ function getShows(): Promise<ShowTitle[]> {
         return {
           id: d.id,
           name: d.get("name"),
-          followers: d.get("numberOfFollowers") || 0
+          followers: d.get("numberOfFollowers") || 0,
+          tvdbId: d.get("ids.tvdb") || 0
         };
       });
     });
