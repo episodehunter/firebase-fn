@@ -35,10 +35,17 @@ export async function get(userId: string, page: number) {
   const shows = await Promise.all(Array.from(showsIds).map(getShow));
   return historyPage.map(h => {
     const show = shows.find(s => s.ids.id === String(h.showId));
-    Object.assign(h, {
+    return {
+      episodeNumber: h.episodeNumber,
       time: h.time.toDate(),
-      showName: (show && show.name) || ""
-    });
-    return h;
+      ids: {
+        showId: h.showId,
+        showTvdb: show.ids.tvdb
+      },
+      type: h.type,
+      season: h.season,
+      episodeh: h.episode,
+      showName: show.name
+    }
   });
 }

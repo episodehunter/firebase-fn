@@ -15,7 +15,10 @@ const app = express()
       res.sendStatus(403);
     } else {
       try {
-        res.send(await get(uid, Math.min(req.query.page | 0, 0)));
+        const t0 = Date.now();
+        const result = await get(uid, Math.min(req.query.page | 0, 0));
+        res.set('Server-Timing', 'fb;desc="Firebase lookup";dur=' + (Date.now() - t0));
+        res.send(result);
       } catch (error) {
         console.error(error);
         res.sendStatus(500);
