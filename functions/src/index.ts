@@ -1,3 +1,4 @@
+import { join as pathJoin } from 'path';
 import * as express from "express";
 import * as cors from "cors";
 import * as functions from "firebase-functions";
@@ -6,6 +7,7 @@ import { updateTitles, getTitles } from "./titles";
 import { auth } from "./firebase-app";
 import { IncomingHttpHeaders } from "http";
 import { onUserCreate } from "./auth";
+import { isClientIdAndSecretValid, getRefreshToken, getAccessToken, getCustomToken, isClientIdValid, isRedirectUriValid } from "./oauth";
 
 const app = express()
   .use(cors({ origin: true }))
@@ -40,6 +42,51 @@ const app = express()
     } catch (error) {
       console.error(error);
       res.sendStatus(500);
+    }
+  })
+  .post("/auth", async (req, res) => {
+    const clientId = req.query["client_id"];
+    const clientSecret = req.query["client_secret"];
+    const grantType = req.query["grant_type"];
+
+    if (!isClientIdAndSecretValid(clientId, clientSecret)) {
+      console.error(`Wrong clientId or clientSecret. Expeted: clientid=${functions.config().oauth.clientid}, clientsecret=${functions.config().oauth.clientsecret} but got clientid=${clientId}, clientSecret=${clientSecret}}`);
+      res.status(400).json({ error: "invalid_grant" });
+    } else if (grantType === "authorization_code") {
+      const code = req.query["code"];
+      try {
+        const responseData = await getRefreshToken(code);
+        res.json(responseData);
+      } catch (error) {
+        console.error(error);
+        res.status(400).json({ error: "invalid_grant" });
+      }
+    } else if (grantType === "refresh_token") {
+      const refreshToken = req.query["refresh_token"];
+      try {
+        const responseData = await getAccessToken(refreshToken)
+        res.json(responseData);
+      } catch (error) {
+        console.error(error);
+        res.status(400).json({ error: "invalid_grant" });
+      }
+    }
+  })
+  .post("/customtoken", async (req, res) => {
+    try {
+      res.json(await getCustomToken(req.body.idToken));
+    } catch (error) {
+      console.error(error);
+      res.status(400).json({ error: 'invalid_grant' })
+    }
+  })
+  .get("/aouthlogin", (req, res) => {
+    if (!isClientIdValid(req.query["client_id"])) {
+      res.status(400).send('client id is invalid');
+    } else if (!isRedirectUriValid(req.query["redirect_uri"])) {
+      res.status(400).send('redirect_uri is invalid');
+    } else {
+      res.sendFile(pathJoin(__dirname + '/login.html'));
     }
   });
 

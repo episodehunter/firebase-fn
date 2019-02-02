@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="viewport" content="width=device-width">
+    <link rel="icon" href="https://episodehunter.tv/img/favicon-64.ico" type="image/x-icon" sizes="64x64">
+    <meta charset="UTF-8">
+    <title>Episodehunter - login</title>
+    <style>
+      body {
+        background: #fff;
+        font-family: 'Lato',sans-serif;
+      }
+      .main {
+        width: 360px;
+        margin: 0 auto;
+        padding-top: 120px;
+        height: 100%;
+        position: relative;
+      }
+      .header {
+        text-align: center;
+      }
+      p {
+        font-size: 18px;
+      }
+      input {
+        width: 100%;
+        border: none;
+        border-bottom: 1px solid #007559;
+        outline: none;
+        background-color: rgba(0, 0, 0, 0);
+        color: #3a3a3a;
+        cursor: initial;
+        font: inherit;
+        height: 100%;
+        padding: 5px;
+        margin-bottom: 15px;
+      }
+      button {
+        float: right;
+        width: 110px;
+        border-color: #e4e4e4;
+        background-color: #fff;
+        color: #007559;
+        outline: 0;
+        border-style: solid;
+        text-align: center;
+        font-weight: bold;
+        overflow: hidden;
+        padding: 0 10px;
+        margin: 6px 8px;
+        line-height: 32px;
+        border-width: 2px;
+        border-radius: 2px;
+        font-size: 14px;
+      }
+      .errorMsg {
+        color: red;
+        text-align: center;
+      }
+    </style>
+    <link href="https://fonts.googleapis.com/css?family=Lato:100,300,400" rel="stylesheet" type="text/css">
+  </head>
+  <body>
+    <div class="main">
+      <div class="header">
+        <img src="https://episodehunter.tv/img/logga.png" width="75" height="75">
+        <p>Welcome to Episodehunter</p>
+      </div>
+      <div id="form-app"></div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/5.8.2/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/5.8.2/firebase-auth.js"></script>
+    <script type="module">
+      import { html, Component, render } from 'https://unpkg.com/htm/preact/standalone.mjs';
+
+      const config = {
+        apiKey: 'AIzaSyB01Rediz1OxOlIRBr5t2WxQpDrxaxEcVU',
+        authDomain: 'newagent-dc3d1.firebaseapp.com',
+        databaseURL: 'https://newagent-dc3d1.firebaseio.com',
+        projectId: 'newagent-dc3d1',
+        storageBucket: 'newagent-dc3d1.appspot.com',
+        messagingSenderId: '776415085282'
+      };
+      firebase.initializeApp(config);
+
+      const button = window.document.getElementById('sign-in-buttion');
+
+      const url = new URL(window.location.href);
+      const redirectUri = url.searchParams.get('redirect_uri');
+      const state = url.searchParams.get('state');
+
+      class LoginForm extends Component {
+        constructor() {
+          super();
+          this.state = {
+            loadingUserState: true,
+            loading: false,
+            email: '',
+            password: '',
+            errorMsg: ''
+          };
+          firebase.auth().onAuthStateChanged(async user => {
+            if (user) {
+              this.getTokenAndRedirect(user)
+              console.log('getTokenAndRedirect')
+            } else {
+              this.setState({ loadingUserState: false });
+            }
+          });
+        }
+
+        async getTokenAndRedirect(user) {
+          const idToken = await user.getIdToken();
+          const customToken = await fetch('https://us-central1-newagent-dc3d1.cloudfunctions.net/fn/customtoken', {
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            method: 'POST',
+            body: JSON.stringify({
+              idToken
+            })
+          }).then(r => r.ok ? r.json() : Promise.reject(new Error('No!')));
+          window.location.href = `${redirectUri}?code=${customToken.token}&state=${state}`;
+        }
+
+        translateFirebaseError(error) {
+          switch (error.code) {
+            case 'auth/wrong-password':
+              return 'Wrong password'
+            case 'auth/user-not-found':
+              return 'No user found with username'
+            case 'auth/invalid-credential':
+              return 'Invalid credentials'
+            default:
+              return error.message
+          }
+        }
+
+        async signIn() {
+          if (this.state.loading) {
+            return;
+          }
+          this.setState({ errorMsg: '', loading: true });
+          await firebase.auth().signInWithEmailAndPassword(this.state.email, this.state.password).catch(error => {
+            this.setState({ errorMsg: this.translateFirebaseError(error), loading: false });
+          });
+        }
+
+        render(props, { loadingUserState, email, password, errorMsg }) {
+          if (loadingUserState) {
+            return null;
+          }
+          return html`
+            <div class="form">
+              <p class="errorMsg">${errorMsg}</p>
+              <input onChange=${e => this.setState({ email: e.target.value })} value=${email} type="text" placeholder="Email" />
+              <input onChange=${e => this.setState({ password: e.target.value })} value=${password} type="password" placeholder="Password" />
+              <button onClick=${() => this.signIn()}>Sign in</button>
+            </div>
+          `;
+        }
+      }
+
+      render(html`<${LoginForm} />`, document.getElementById('form-app'));
+    </script>
+
+  </body>
+</html>
