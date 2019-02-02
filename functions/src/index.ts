@@ -5,6 +5,7 @@ import { get } from "./history";
 import { updateTitles, getTitles } from "./titles";
 import { auth } from "./firebase-app";
 import { IncomingHttpHeaders } from "http";
+import { onUserCreate } from "./auth";
 
 const app = express()
   .use(cors({ origin: true }))
@@ -60,3 +61,4 @@ function getToken(headers: IncomingHttpHeaders): string | null {
 }
 
 export const fn = functions.https.onRequest(app);
+export const onCreateUser = functions.auth.user().onCreate(onUserCreate)
