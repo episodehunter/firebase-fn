@@ -2,6 +2,7 @@ import { join as pathJoin } from 'path';
 import * as express from "express";
 import * as cors from "cors";
 import * as functions from "firebase-functions";
+import { urlencoded } from 'body-parser';
 import { get } from "./history";
 import { updateTitles, getTitles } from "./titles";
 import { auth } from "./firebase-app";
@@ -11,6 +12,7 @@ import { isClientIdAndSecretValid, getRefreshToken, getAccessToken, getCustomTok
 
 const app = express()
   .use(cors({ origin: true }))
+  .use(urlencoded({ extended: false }))
   .get("/ping", (req, res) => res.send("Pong"))
   .get("/history", async (req, res) => {
     const uid = await getUserId(getToken(req.headers));
@@ -45,15 +47,15 @@ const app = express()
     }
   })
   .post("/auth", async (req, res) => {
-    const clientId = req.query["client_id"];
-    const clientSecret = req.query["client_secret"];
-    const grantType = req.query["grant_type"];
+    const clientId = req.body.client_id;
+    const clientSecret = req.body.client_secret;
+    const grantType = req.body.grant_type;
 
     if (!isClientIdAndSecretValid(clientId, clientSecret)) {
       console.error(`Wrong clientId or clientSecret. Expeted: clientid=${functions.config().oauth.clientid}, clientsecret=${functions.config().oauth.clientsecret} but got clientid=${clientId}, clientSecret=${clientSecret}}`);
       res.status(400).json({ error: "invalid_grant" });
     } else if (grantType === "authorization_code") {
-      const code = req.query["code"];
+      const code = req.body.code;
       try {
         const responseData = await getRefreshToken(code);
         res.json(responseData);
@@ -62,7 +64,7 @@ const app = express()
         res.status(400).json({ error: "invalid_grant" });
       }
     } else if (grantType === "refresh_token") {
-      const refreshToken = req.query["refresh_token"];
+      const refreshToken = req.body.refresh_token;
       try {
         const responseData = await getAccessToken(refreshToken)
         res.json(responseData);
@@ -70,6 +72,8 @@ const app = express()
         console.error(error);
         res.status(400).json({ error: "invalid_grant" });
       }
+    } else {
+      res.status(400).json({ error: "invalid_grant" });
     }
   })
   .post("/customtoken", async (req, res) => {
