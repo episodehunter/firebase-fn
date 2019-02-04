@@ -1,4 +1,4 @@
-import { firestore } from "./firebase-app";
+import { firestore } from "./util/firebase-app";
 import { WatchHistory, Show } from "./types";
 
 function getHistoryPage(userId: string, page: number): Promise<WatchHistory[]> {

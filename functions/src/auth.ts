@@ -1,5 +1,5 @@
 import { UserRecord } from "firebase-functions/lib/providers/auth";
-import { firestore } from "./firebase-app";
+import { firestore } from "./util/firebase-app";
 
 export function onUserCreate(user: UserRecord) {
   return firestore

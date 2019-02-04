@@ -1,5 +1,5 @@
 import * as functions from "firebase-functions";
-import { auth } from "./firebase-app";
+import { auth } from "./util/firebase-app";
 import { fetch } from "./fetch";
 
 function getApiKey() {

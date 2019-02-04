@@ -1,4 +1,4 @@
-import { firestore } from "./firebase-app";
+import { firestore } from "./util/firebase-app";
 import { ShowTitle } from "./types";
 
 function getShows(): Promise<ShowTitle[]> {

@@ -5,10 +5,11 @@ import * as functions from "firebase-functions";
 import { urlencoded } from 'body-parser';
 import { get } from "./history";
 import { updateTitles, getTitles } from "./titles";
-import { auth } from "./firebase-app";
-import { IncomingHttpHeaders } from "http";
 import { onUserCreate } from "./auth";
 import { isClientIdAndSecretValid, getRefreshToken, getAccessToken, getCustomToken, isClientIdValid, isRedirectUriValid } from "./oauth";
+import { dialogflowApp } from './action/actions';
+import { getUserId, getToken } from './util/token';
+import { testFunction } from './test';
 
 const app = express()
   .use(cors({ origin: true }))
@@ -92,24 +93,11 @@ const app = express()
     } else {
       res.sendFile(pathJoin(__dirname + '/login.html'));
     }
+  })
+  .get("/test", (req, res) => {
+    testFunction().then(r => res.send(r)).catch(e => res.status(500).send(e));
   });
 
-function getUserId(token: string | null) {
-  if (!token) {
-    return null;
-  }
-  return auth
-    .verifyIdToken(token)
-    .then(r => r.uid)
-    .catch(e => null);
-}
-
-function getToken(headers: IncomingHttpHeaders): string | null {
-  if (headers && headers.authorization) {
-    return headers.authorization.split(" ")[1];
-  }
-  return null;
-}
-
 export const fn = functions.https.onRequest(app);
+export const dialogflowFirebaseFulfillment = functions.https.onRequest(dialogflowApp);
 export const onCreateUser = functions.auth.user().onCreate(onUserCreate)
