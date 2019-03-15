@@ -14,7 +14,9 @@ export type UserMetaData = {
 
 export type Show = {
   name: string
-  oldId: number;
+  ids: {
+    id: number
+  }
 }
 
 const showCollection = () => firestore.collection('shows');
@@ -151,7 +153,7 @@ export async function getNextAirEpisode(showName: string) {
       type: 'no-show'
     };
   }
-  const episode = await getUpcommingEpisodes(String(show.oldId));
+  const episode = await getUpcommingEpisodes(String(show.ids.id));
   if (!episode) {
     return {
       type: 'no-episode'
