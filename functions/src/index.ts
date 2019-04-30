@@ -3,7 +3,7 @@ import * as express from "express";
 import * as cors from "cors";
 import * as functions from "firebase-functions";
 import { urlencoded } from 'body-parser';
-import { onUserCreate } from "./auth";
+import { onUserCreate, onUserDelete } from "./auth";
 import { isClientIdAndSecretValid, getRefreshToken, getAccessToken, getCustomToken, isClientIdValid, isRedirectUriValid } from "./oauth";
 import { dialogflowApp } from './action/actions';
 import { testFunction } from './test';
@@ -66,3 +66,4 @@ const app = express()
 export const fn = functions.https.onRequest(app);
 export const dialogflowFirebaseFulfillment = functions.https.onRequest(dialogflowApp);
 export const onCreateUser = functions.auth.user().onCreate(onUserCreate)
+export const onDeleteUser = functions.auth.user().onDelete(onUserDelete)

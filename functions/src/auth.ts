@@ -11,6 +11,13 @@ export function onUserCreate(user: UserRecord) {
     });
 }
 
+export function onUserDelete(user: UserRecord) {
+  return firestore
+    .collection("users")
+    .doc(user.uid)
+    .delete();
+}
+
 function generateApiKey() {
   const validChars = 'ABCDEFGHKMNPQRSTUVWXYZabcdefghkmnpqrstuvwxyz23456789';
   return Array.from<string>({ length: 5 }).reduce(key => {
