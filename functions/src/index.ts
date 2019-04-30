@@ -3,50 +3,15 @@ import * as express from "express";
 import * as cors from "cors";
 import * as functions from "firebase-functions";
 import { urlencoded } from 'body-parser';
-import { get } from "./history";
-import { updateTitles, getTitles } from "./titles";
 import { onUserCreate } from "./auth";
 import { isClientIdAndSecretValid, getRefreshToken, getAccessToken, getCustomToken, isClientIdValid, isRedirectUriValid } from "./oauth";
 import { dialogflowApp } from './action/actions';
-import { getUserId, getToken } from './util/token';
 import { testFunction } from './test';
 
 const app = express()
   .use(cors({ origin: true }))
   .use(urlencoded({ extended: false }))
   .get("/ping", (req, res) => res.send("Pong"))
-  .get("/history", async (req, res) => {
-    const uid = await getUserId(getToken(req.headers));
-    if (!uid) {
-      res.sendStatus(403);
-    } else {
-      try {
-        const t0 = Date.now();
-        const result = await get(uid, Math.min(req.query.page | 0, 0));
-        res.set('Server-Timing', 'fb;desc="Firebase lookup";dur=' + (Date.now() - t0));
-        res.send(result);
-      } catch (error) {
-        console.error(error);
-        res.sendStatus(500);
-      }
-    }
-  })
-  .get("/updatetitles", async (req, res) => {
-    try {
-      res.send(await updateTitles());
-    } catch (error) {
-      console.error(error);
-      res.sendStatus(500);
-    }
-  })
-  .get("/titles", async (req, res) => {
-    try {
-      res.send(await getTitles());
-    } catch (error) {
-      console.error(error);
-      res.sendStatus(500);
-    }
-  })
   .post("/auth", async (req, res) => {
     const clientId = req.body.client_id;
     const clientSecret = req.body.client_secret;
