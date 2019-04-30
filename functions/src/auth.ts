@@ -1,7 +1,9 @@
 import { UserRecord } from "firebase-functions/lib/providers/auth";
 import { firestore } from "./util/firebase-app";
+import { logger } from "./util/logger";
 
 export function onUserCreate(user: UserRecord) {
+  logger.log(`Create user ${user.uid}`)
   return firestore
     .collection("users")
     .doc(user.uid)
@@ -12,6 +14,7 @@ export function onUserCreate(user: UserRecord) {
 }
 
 export function onUserDelete(user: UserRecord) {
+  logger.log(`Delete user ${user.uid}`)
   return firestore
     .collection("users")
     .doc(user.uid)
