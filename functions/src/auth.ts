@@ -6,6 +6,15 @@ export function onUserCreate(user: UserRecord) {
     .collection("users")
     .doc(user.uid)
     .set({
-      following: []
+      following: [],
+      apikey: generateApiKey()
     });
+}
+
+function generateApiKey() {
+  const validChars = 'ABCDEFGHKMNPQRSTUVWXYZabcdefghkmnpqrstuvwxyz23456789';
+  return Array.from<string>({ length: 5 }).reduce(key => {
+    key += validChars[(Math.floor(Math.random() * Math.floor(validChars.length)))]
+    return key;
+  }, '')
 }
